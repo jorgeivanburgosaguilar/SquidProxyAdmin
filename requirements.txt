@@ -1,0 +1,7 @@
+Django==1.9.11
+django-choice-object==0.8
+django-simple-history==1.8.1
+pytz==2016.7
+six==1.10.0
+virtualenv==15.1.0
+psycopg2==2.5.4
