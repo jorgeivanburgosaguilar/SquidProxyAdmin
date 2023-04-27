@@ -1,9 +1,10 @@
-# -*- coding: utf-8 -*-
-from django.conf.urls import include, url
+"""
+URL configuration for SquidProxyAdmin project.
+"""
 from django.contrib import admin
-
+from django.urls import path, include
 
 urlpatterns = [
-    url(r'^', include('Administrador.urls')),
-    url(r'^admin/', include(admin.site.urls)),
+    path('^', include('Administrador.urls')),
+    path('admin/', admin.site.urls),
 ]
