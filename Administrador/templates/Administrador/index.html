@@ -1,99 +1,110 @@
 ﻿<!DOCTYPE html>
 <html lang="es">
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Asignaciones | Squid Proxy Admin</title>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Asignaciones | Squid Proxy Admin</title>
 
-        {% load staticfiles %}
-        <link href="{% static 'Administrador/css/bootstrap.min.css' %}" media="all" rel="stylesheet">
-        <link href="{% static 'Administrador/css/bootstrap-theme.min.css' %}" media="all" rel="stylesheet">
-        <link href="{% static 'Administrador/img/favicon.ico' %}" media="all" rel="icon">
+    {% load static %}
+    <link
+      href="{% static 'Administrador/css/bootstrap.min.css' %}"
+      media="all"
+      rel="stylesheet"
+    />
+    <link
+      href="{% static 'Administrador/css/bootstrap-theme.min.css' %}"
+      media="all"
+      rel="stylesheet"
+    />
+    <link
+      href="{% static 'Administrador/img/favicon.ico' %}"
+      media="all"
+      rel="icon"
+    />
 
-        <style type="text/css">
-            body
-            {
-                padding-top: 20px;
-            }
-        </style>
-    </head>
-    <body>
-        <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
-            <div class="container">
-                <div class="navbar-header">
-                    <a class="navbar-brand" href="#">Squid Proxy Admin</a>
-                </div>
-                <div id="navbar" class="navbar-collapse collapse">
-                    <ul class="nav navbar-nav navbar-right">
-                        <li>
-                            <p class="navbar-btn">
-                                <a href="{% url 'admin:index' %}" class="btn btn-success" role="button">Administrar</a>
-                            </p>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
-
-        <div class="container-fluid">
-            <div class="page-header">
-                <h1>Asignaciones</h1>
-            </div>
-
-            <div class="table-responsive">
-                <table class="table table-striped table-bordered table-hover">
-                    <thead>
-                        <tr>
-                            <th>IP</th>
-                            <th>MAC</th>
-                            <th>Nombre del Equipo</th>
-                            <th>Usuario</th>
-                            <th>Departamento</th>
-                            <th>Nivel</th>
-                            <th>Equipo</th>
-                            <th>Tipo de Conexion</th>
-                        </tr>
-                    </thead>
-                    <tfoot>
-                        <tr>
-                            <th>IP</th>
-                            <th>MAC</th>
-                            <th>Nombre del Equipo</th>
-                            <th>Usuario</th>
-                            <th>Departamento</th>
-                            <th>Nivel</th>
-                            <th>Equipo</th>
-                            <th>Tipo de Conexion</th>
-                        </tr>
-                    </tfoot>
-                    <tbody>
-                        {% for asignacion in asignaciones %}
-                        <tr>
-                            <td>192.168.2.{{ asignacion.ip }}</td>
-                            <td>{{ asignacion.mac }}</td>
-                            <td>{{ asignacion.nombre_equipo }}</td>
-                            <td>{{ asignacion.usuario__nombre }}</td>
-                            <td>{{ asignacion.usuario__departamento__nombre }}</td>
-                            <td>{{ asignacion.nivel__nombre }}</td>
-                            <td>{{ asignacion.equipo__nombre }}</td>
-                            <td>
-                                {% if asignacion.tipo_conexion == 1 %}
-                                    LAN
-                                {% elif asignacion.tipo_conexion == 2 %}
-                                    WLAN
-                                {% else %}
-                                    Otro
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+    <style type="text/css">
+      body {
+        padding-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <a class="navbar-brand" href="#">Squid Proxy Admin</a>
         </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav navbar-right">
+            <li>
+              <p class="navbar-btn">
+                <a
+                  href="{% url 'admin:index' %}"
+                  class="btn btn-success"
+                  role="button"
+                  >Administrar</a
+                >
+              </p>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
 
-        <script src="{% static 'Administrador/js/jquery.min.js' %}"></script>
-        <script src="{% static 'Administrador/js/bootstrap.min.js' %}"></script>
-    </body>
+    <div class="container-fluid">
+      <div class="page-header">
+        <h1>Asignaciones</h1>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-striped table-bordered table-hover">
+          <thead>
+            <tr>
+              <th>IP</th>
+              <th>MAC</th>
+              <th>Nombre del Equipo</th>
+              <th>Usuario</th>
+              <th>Departamento</th>
+              <th>Nivel</th>
+              <th>Equipo</th>
+              <th>Tipo de Conexion</th>
+            </tr>
+          </thead>
+          <tfoot>
+            <tr>
+              <th>IP</th>
+              <th>MAC</th>
+              <th>Nombre del Equipo</th>
+              <th>Usuario</th>
+              <th>Departamento</th>
+              <th>Nivel</th>
+              <th>Equipo</th>
+              <th>Tipo de Conexion</th>
+            </tr>
+          </tfoot>
+          <tbody>
+            {% for asignacion in asignaciones %}
+            <tr>
+              <td>192.168.2.{{ asignacion.ip }}</td>
+              <td>{{ asignacion.mac }}</td>
+              <td>{{ asignacion.nombre_equipo }}</td>
+              <td>{{ asignacion.usuario__nombre }}</td>
+              <td>{{ asignacion.usuario__departamento__nombre }}</td>
+              <td>{{ asignacion.nivel__nombre }}</td>
+              <td>{{ asignacion.equipo__nombre }}</td>
+              <td>
+                {% if asignacion.tipo_conexion == 1 %} LAN {% elif
+                asignacion.tipo_conexion == 2 %} WLAN {% else %} Otro {% endif
+                %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <script src="{% static 'Administrador/js/jquery.min.js' %}"></script>
+    <script src="{% static 'Administrador/js/bootstrap.min.js' %}"></script>
+  </body>
 </html>

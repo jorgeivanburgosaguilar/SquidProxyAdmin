@@ -1,7 +1,9 @@
-# -*- coding: utf-8 -*-
-from django.conf.urls import url
+'''
+URLs
+'''
+from django.urls import path
 from Administrador import views
 
 urlpatterns = [
-    url(r'^$', views.index, name='index'),
+    path('^$', views.index, name='index'),
 ]
