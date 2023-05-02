@@ -224,7 +224,7 @@ class Asignacion(models.Model):
     'Obtiene las IPs que quedan disponibles incluyendo la de la instancia actual.'
     ips_rango_dinamico = range(195, 200)
     ips_asignadas = Asignacion.objects.values_list('ip', flat=True)
-    ips_ocupadas = list(ips_asignadas) + ips_rango_dinamico
+    ips_ocupadas = list(ips_asignadas) + list(ips_rango_dinamico)
     ips_disponibles = []
 
     if para_admin:

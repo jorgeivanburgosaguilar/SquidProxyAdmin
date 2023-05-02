@@ -1,6 +1,10 @@
 {
     "recommendations": [
-        "donjayamanne.python-environment-manager",
-        "ms-python.python"
+      "ms-python.autopep8",
+      "editorconfig.editorconfig",
+      "ms-python.vscode-pylance",
+      "ms-python.pylint",
+      "mikestead.dotenv",
+      "ms-python.python"
     ]
 }
