@@ -16,3 +16,4 @@
 *.pylintrc eol=lf
 *.pep8 eol=lf
 .python-version eol=lf
+*.env eol=lf

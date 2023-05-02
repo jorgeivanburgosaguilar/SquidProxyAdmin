@@ -2,7 +2,11 @@
 Django settings for SquidProxyAdmin project.
 """
 from pathlib import Path
+from dotenv import load_dotenv
 import os
+
+# Cargar archivo .env
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -14,7 +18,7 @@ PROJECT_PATH = os.path.join(SETTINGS_DIR, os.pardir)
 PROJECT_ROOT = os.path.abspath(PROJECT_PATH)
 
 # Opciones de seguridad
-SECRET_KEY = 'SECRET_KEY'
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_SSL_REDIRECT = False
@@ -86,12 +90,12 @@ WSGI_APPLICATION = 'SquidProxyAdmin.wsgi.application'
 CONN_MAX_AGE = 60
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'SquidProxyAdmin',
-        'USER': 'USERNAME',
-        'PASSWORD': 'PASSWORD',
-        'HOST': '127.0.0.1',
-        'PORT': '5432',
+        'ENGINE': os.getenv('DJANGO_DBENGINE'),
+        'NAME': os.getenv('DJANGO_DBNAME'),
+        'USER': os.getenv('DJANGO_DBUSER'),
+        'PASSWORD': os.getenv('DJANGO_DBPASS'),
+        'HOST': os.getenv('DJANGO_DBHOST'),
+        'PORT': os.getenv('DJANGO_DBPORT'),
     }
 }
 
