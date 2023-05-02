@@ -93,9 +93,13 @@
               <td>{{ asignacion.nivel__nombre }}</td>
               <td>{{ asignacion.equipo__nombre }}</td>
               <td>
-                {% if asignacion.tipo_conexion == 1 %} LAN {% elif
-                asignacion.tipo_conexion == 2 %} WLAN {% else %} Otro {% endif
-                %}
+                {% if asignacion.tipo_conexion == 1 %}
+                  LAN
+                {% elif asignacion.tipo_conexion == 2 %}
+                  WLAN
+                {% else %}
+                  Otro
+                {% endif %}
               </td>
             </tr>
             {% endfor %}
