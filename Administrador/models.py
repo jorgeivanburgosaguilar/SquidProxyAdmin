@@ -203,7 +203,7 @@ class Asignacion(models.Model):
     LAN = 1
     WLAN = 2
 
-  IP_CHOICES = [(i, f'192.168.2.{i}' % i) for i in range(1, 255)]
+  IP_CHOICES = [(i, f'192.168.2.{i}') for i in range(1, 255)]
   usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
   nivel = models.ForeignKey(Nivel, on_delete=models.CASCADE)
   nombre_equipo = models.CharField(max_length=256, blank=True, verbose_name='nombre del equipo',
