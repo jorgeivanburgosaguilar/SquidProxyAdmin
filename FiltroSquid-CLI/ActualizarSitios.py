@@ -1,74 +1,78 @@
-#!/usr/bin/python -u
-# -*- coding: utf-8 -*-
-# Actualizar Sitios en la Lista Negra 2.0
+#!/usr/bin/env python
+'''
+Actualizar Sitios en la Lista Negra 2.0
+'''
 import os
+import sys
+import django
 from time import asctime
-from ConfigParser import SafeConfigParser
-from Funciones import obtener_ruta_configuraciones, depurar_dominios
+from configparser import ConfigParser
+from funciones import obtener_ruta_configuraciones, depurar_dominios
 
 
 # Cargar configuraciones
-configParser = SafeConfigParser()
-configParser.read(os.path.join(obtener_ruta_configuraciones(), 'principal.conf'))
+config_parser = ConfigParser()
+config_parser.read(os.path.join(
+  obtener_ruta_configuraciones(), 'principal.conf'))
+current_path = os.path.dirname(os.path.dirname(__file__))
+sys.path.append(current_path)
 
 # Directivas del Filtro
-DirectorioListasNegrasActualizacion = configParser.get('FiltroWeb', 'DirectorioListasNegrasActualizacion')
-
+DirectorioListasNegrasActualizacion = config_parser.get(
+  'FiltroWeb', 'DirectorioListasNegrasActualizacion')
 
 # Cargar backend basado en Django
-import django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'SquidProxyAdmin.settings')
 django.setup()
 
 # Importes de Django
+# pylint: disable=wrong-import-position
 from django.db import connection
 from Administrador.models import Categoria, Sitio
-
+# pylint: enable=wrong-import-position
 
 try:
-    # Inicio
-    print 'Inicio: %s' % asctime()
+  # Inicio
+  print('Inicio: ', asctime())
 
-    # Variables de sesion
-    contenidos = []
-    elementos = []
+  # Variables de sesion
+  contenidos = []
+  elementos = []
 
-    # Truncar tabla con los sitios para ingresar los nuevos registros
-    cursor = connection.cursor()
-    cursor.execute('TRUNCATE TABLE "%s"' % Sitio._meta.db_table)
-    cursor.close()
+  # Truncar tabla con los sitios para ingresar los nuevos registros
+  cursor = connection.cursor()
+  # pylint: disable=protected-access
+  cursor.execute(f'TRUNCATE TABLE "{Sitio._meta.db_table}"')
+  # pylint: enable=protected-access
+  cursor.close()
 
-    # Procesamiento, Ingreso y Ordenacion de las listas negras en la BD
-    categorias = Categoria.objects.all()
-    for c in categorias:
-        # Inicio de Categoria
-        print 'Procesando %s ......' % c.nombre,
+  # Procesamiento, Ingreso y Ordenacion de las listas negras en la BD
+  categorias = Categoria.objects.all()
+  for c in categorias:
+    # Inicio de Categoria
+    print(f'Procesando {c.nombre} ......'),
 
-        # Reiniciar las variables de sesion
-        del contenidos[:]
-        del elementos[:]
+    # Reiniciar las variables de sesion
+    del contenidos[:]
+    del elementos[:]
 
+    # Procesamos el archivo de texto con los dominios
+    rutac = os.path.join(DirectorioListasNegrasActualizacion, c.ruta, 'domains')
+    with open(rutac, 'r', encoding='utf-8') as archivo:
+      contenidos = depurar_dominios(archivo.read())
 
-        # Procesamos el archivo de texto con los dominios
-        with open(os.path.join(DirectorioListasNegrasActualizacion, c.ruta, 'domains'), 'r') as archivo:
-            contenidos = depurar_dominios(archivo.read())
+    # Convertimos en una lista de modelos tipo Sitio
+    for registro in contenidos:
+      elementos.append(Sitio(categoria=c, dominio=registro))
 
+    # Los metemos en la base de datos en grupos de 1000 registros
+    Sitio.objects.bulk_create(elementos, batch_size=1000)
 
-        # Convertimos en una lista de modelos tipo Sitio
-        for registro in contenidos:
-            elementos.append(Sitio(categoria=c, dominio=registro))
+    # Fin de Categoria
+    print(f'{len(elementos)} registros')
 
-
-        # Los metemos en la base de datos en grupos de 1000 registros
-        Sitio.objects.bulk_create(elementos, batch_size=1000)
-
-
-        # Fin de Categoria
-        print '%s registros' % len(elementos)
-
-
-    # Fin
-    print 'Fin: %s' % asctime()
+  # Fin
+  print('Fin: ', asctime())
 
 except Exception as e:
-    print '{0}: {1}'.format(str(type(e)), str(e))
+  print(f'{str(type(e))}: {str(e)}')
