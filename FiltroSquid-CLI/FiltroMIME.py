@@ -13,7 +13,6 @@ from funciones import obtener_ruta_configuraciones, es_una_ipv4_valida, squid_me
 
 
 # Cargar configuraciones
-# Cargar configuraciones
 config_parser = ConfigParser()
 config_parser.read(os.path.join(
   obtener_ruta_configuraciones(), 'principal.conf'))
@@ -40,9 +39,9 @@ django.setup()
 
 # Importes de Django
 # pylint: disable=wrong-import-position
-from Administrador.models import Asignacion, TipoMime, Configuracion
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.db import close_old_connections, ProgrammingError, OperationalError
+from Administrador.models import Asignacion, TipoMime, Configuracion
 # pylint: enable=wrong-import-position
 
 
@@ -174,6 +173,6 @@ except KeyboardInterrupt:
 
 except Exception as e:
   if not en_produccion:
-    sys.stdout.write('{0}: {1}'.format(str(type(e)), str(e)))
+    sys.stdout.write(f'{str(type(e))}: {str(e)}')
 
   squid_mensaje(mensaje='Error', registro='ErrorExternalACL-MIME')
