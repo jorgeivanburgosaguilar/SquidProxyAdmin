@@ -5,6 +5,7 @@
       "ms-python.vscode-pylance",
       "ms-python.pylint",
       "mikestead.dotenv",
-      "ms-python.python"
+      "ms-python.python",
+      "donjayamanne.python-environment-manager"
     ]
 }
