@@ -9,13 +9,13 @@ import re
 import django
 from urllib.parse import quote, unquote_plus, urlparse
 from configparser import ConfigParser
-from funciones import obtener_ruta_configuraciones, es_una_ipv4_valida, squid_mensaje
+from funciones import ruta_configuraciones, es_una_ipv4_valida, squid_mensaje
 
 
 # Cargar configuraciones
 config_parser = ConfigParser()
 config_parser.read(os.path.join(
-  obtener_ruta_configuraciones(), 'principal.conf'))
+  ruta_configuraciones(), 'principal.conf'))
 
 # Directivas del Filtro
 en_produccion = config_parser.getboolean('FiltroWeb', 'Produccion')

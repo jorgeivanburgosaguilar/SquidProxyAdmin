@@ -7,12 +7,12 @@ import os
 import sys
 import django
 from configparser import ConfigParser
-from funciones import obtener_ruta_configuraciones
+from funciones import ruta_configuraciones
 
 # Cargar configuraciones
 config_parser = ConfigParser()
 config_parser.read(os.path.join(
-  obtener_ruta_configuraciones(), 'principal.conf'))
+  ruta_configuraciones(), 'principal.conf'))
 
 # Directivas del Filtro
 en_produccion = config_parser.getboolean('FiltroWeb', 'Produccion')

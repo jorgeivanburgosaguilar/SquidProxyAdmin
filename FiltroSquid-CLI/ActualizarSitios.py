@@ -7,13 +7,13 @@ import sys
 import django
 from time import asctime
 from configparser import ConfigParser
-from funciones import obtener_ruta_configuraciones, depurar_dominios
+from funciones import ruta_configuraciones, depurar_dominios
 
 
 # Cargar configuraciones
 config_parser = ConfigParser()
 config_parser.read(os.path.join(
-  obtener_ruta_configuraciones(), 'principal.conf'))
+  ruta_configuraciones(), 'principal.conf'))
 current_path = os.path.dirname(os.path.dirname(__file__))
 sys.path.append(current_path)
 

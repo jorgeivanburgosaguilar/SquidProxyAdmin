@@ -12,7 +12,7 @@ from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from datetime import date
 from urllib.parse import quote, unquote_plus
 from configparser import ConfigParser
-from funciones import (obtener_ruta_configuraciones, es_una_ipv4_valida,
+from funciones import (ruta_configuraciones, es_una_ipv4_valida,
                        obtener_dominio, squid_mensaje)
 
 
@@ -23,7 +23,7 @@ sys.path.append(current_path)
 # Cargar configuraciones
 config_parser = ConfigParser()
 config_parser.read(os.path.join(
-  obtener_ruta_configuraciones(), 'principal.conf'))
+  ruta_configuraciones(), 'principal.conf'))
 
 # Directivas y mensajes de error
 en_produccion = config_parser.getboolean('FiltroWeb', 'Produccion')
