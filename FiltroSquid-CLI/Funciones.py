@@ -6,18 +6,19 @@ import socket
 from urllib.parse import urlparse
 
 
-def obtener_ruta_configuraciones():
+def ruta_configuraciones():
+  ''' Devuelve la ruta hacia el directorio con las Configuraciones'''
   current_directory = os.path.dirname(os.path.realpath(__file__))
   return os.path.abspath(os.path.join(current_directory, 'Configuraciones'))
 
 
-def obtener_ruta_tlds():
-  return os.path.join(obtener_ruta_configuraciones(), 'effective_tld_names.dat')
-
-
-# TLDs Globales Validos
-with open(obtener_ruta_tlds(), 'r', encoding='utf-8') as archivo:
-  tlds = [linea.strip() for linea in archivo if linea[0] not in '/\n']
+# Procsar TLDs Validos
+tlds: list[str] = []
+tlds_rutas = [os.path.join(ruta_configuraciones(), 'effective_tld_names.dat'),
+              os.path.join(ruta_configuraciones(), 'local_tlds.dat')]
+for tlds_ruta in tlds_rutas:
+  with open(tlds_ruta, 'r', encoding='utf-8') as archivo:
+    tlds.extend(linea.strip() for linea in archivo if linea[0] not in '/\n')
 
 
 def squid_mensaje(tipo='OK', mensaje='', registro=''):
