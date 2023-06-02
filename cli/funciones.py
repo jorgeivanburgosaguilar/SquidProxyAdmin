@@ -6,19 +6,27 @@ import socket
 from urllib.parse import urlparse
 
 
+def estamos_en_produccion():
+  return os.getenv('SQUIDPROXYADM_ENPRODUCCION', 'False') == 'True'
+
+
 def ruta_configuraciones():
   ''' Devuelve la ruta hacia el directorio con las Configuraciones'''
   current_directory = os.path.dirname(os.path.realpath(__file__))
-  return os.path.abspath(os.path.join(current_directory, 'Configuraciones'))
+  return os.path.abspath(os.path.join(current_directory, 'config2'))
 
 
-# Procsar TLDs Validos
-tlds: list[str] = []
-tlds_rutas = [os.path.join(ruta_configuraciones(), 'effective_tld_names.dat'),
-              os.path.join(ruta_configuraciones(), 'local_tlds.dat')]
-for tlds_ruta in tlds_rutas:
-  with open(tlds_ruta, 'r', encoding='utf-8') as archivo:
-    tlds.extend(linea.strip() for linea in archivo if linea[0] not in '/\n')
+# Procesar TLDs Validos
+def procesar_tlds():
+  ''' Procesar Lista TLDs Validos '''
+  tlds: list[str] = []
+  tlds_rutas = [os.path.join(ruta_configuraciones(), 'effective_tld_names.dat'),
+                os.path.join(ruta_configuraciones(), 'local_tlds.dat')]
+  for tlds_ruta in tlds_rutas:
+    with open(tlds_ruta, 'r', encoding='utf-8') as archivo:
+      tlds.extend(linea.strip() for linea in archivo if linea[0] not in '/\n')
+
+  return tlds
 
 
 def squid_mensaje(tipo='OK', mensaje='', registro=''):
@@ -41,7 +49,7 @@ def es_una_ipv4_valida(ip):
     return None
 
 
-def es_un_dominio_valido(dominio):
+def es_un_dominio_valido(dominio, tlds: list[str]):
   '''Funcion para verificar que el dominio sea valido'''
   dominio = f'http://{dominio}/'
 
@@ -69,7 +77,7 @@ def es_un_dominio_valido(dominio):
   return None
 
 
-def obtener_dominio(dominio, efectivo=False):
+def obtener_dominio(dominio, tlds: list[str], efectivo=False):
   '''Funcion para obtener el host/dominio de una URL'''
   dominio = f'http://{dominio}/'
 
@@ -102,7 +110,7 @@ def obtener_dominio(dominio, efectivo=False):
   raise ValueError('Dominio Invalido')
 
 
-def depurar_dominios(texto):
+def depurar_dominios(texto, tlds: list[str]):
   '''
   Funcion para ordenar y eliminar dominios invalidos
   asi como duplicados de un cadena separada
@@ -115,7 +123,7 @@ def depurar_dominios(texto):
   for registro in lista:
     registro = registro.rstrip('. "\'\r\t').lstrip().lower()
 
-    if (len(registro) > 2 and es_un_dominio_valido(registro)):
+    if (len(registro) > 2 and es_un_dominio_valido(registro, tlds)):
       registros_unicos.append(registro)
 
   return registros_unicos
