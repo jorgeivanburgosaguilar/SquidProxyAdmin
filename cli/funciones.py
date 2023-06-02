@@ -13,10 +13,9 @@ def estamos_en_produccion():
 def ruta_configuraciones():
   ''' Devuelve la ruta hacia el directorio con las Configuraciones'''
   current_directory = os.path.dirname(os.path.realpath(__file__))
-  return os.path.abspath(os.path.join(current_directory, 'config2'))
+  return os.path.abspath(os.path.join(current_directory, 'config'))
 
 
-# Procesar TLDs Validos
 def procesar_tlds():
   ''' Procesar Lista TLDs Validos '''
   tlds: list[str] = []

@@ -11,33 +11,15 @@ from django.db import close_old_connections, ProgrammingError, OperationalError
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from datetime import date
 from urllib.parse import quote, unquote_plus
-from configparser import ConfigParser
-from funciones import (ruta_configuraciones, es_una_ipv4_valida,
-                       obtener_dominio, squid_mensaje)
+from funciones import (estamos_en_produccion, procesar_tlds,
+                       es_una_ipv4_valida, obtener_dominio, squid_mensaje)
 
 
 # Agregar directorio actual a las rutas del entorno
 current_path = os.path.dirname(os.path.dirname(__file__))
 sys.path.append(current_path)
 
-# Cargar configuraciones
-config_parser = ConfigParser()
-config_parser.read(os.path.join(
-  ruta_configuraciones(), 'principal.conf'))
-
-# Directivas y mensajes de error
-en_produccion = config_parser.getboolean('FiltroWeb', 'Produccion')
-ArgsError = quote(config_parser.get('Mensajes', 'ArgsError'))
-IPError = quote(config_parser.get('Mensajes', 'IPError'))
-IPSinAsignacion = quote(config_parser.get('Mensajes', 'IPSinAsignacion'))
-DominioInvalido = quote(config_parser.get('Mensajes', 'DominioInvalido'))
-AccesoDenegado = quote(config_parser.get('Mensajes', 'AccesoDenegado'))
-AccesoDenegadoSinAccesoAInternet = quote(
-  config_parser.get('Mensajes', 'AccesoDenegadoSinAccesoAInternet'))
-EnMantenimiento = quote(config_parser.get('Mensajes', 'EnMantenimiento'))
-MuerteSubita = quote(config_parser.get('Mensajes', 'MuerteSubita'))
-
-# Inicializar Django
+# Cargar backend basado en Django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'SquidProxyAdmin.settings')
 django.setup()
 
@@ -47,6 +29,17 @@ from Administrador.models import (Asignacion, SitioPermanentementePermitido,
                                   AsignacionTemporalUsuario,
                                   AsignacionTemporalDepartamento, Sitio)
 
+# Configuraciones y mensajes de error
+PRODUCCION = estamos_en_produccion()
+ARGSERROR = quote(os.getenv('SQUIDPROXYADM_ARGSERROR'))
+IPERROR = quote(os.getenv('SQUIDPROXYADM_IPERROR'))
+IPSINASIGNACION = quote(os.getenv('SQUIDPROXYADM_IPSINASIGNACION'))
+DOMINIOINVALIDO = quote(os.getenv('SQUIDPROXYADM_DOMINIOINVALIDO'))
+ACCESODENEGADO = quote(os.getenv('SQUIDPROXYADM_ACCESODENEGADO'))
+ACCESODENEGADOSINACCESOAINTERNET = quote(
+  os.getenv('SQUIDPROXYADM_ACCESODENEGADOSINACCESOAINTERNET'))
+ENMANTENIMIENTO = quote(os.getenv('SQUIDPROXYADM_ENMANTENIMIENTO'))
+MUERTESUBITA = quote(os.getenv('SQUIDPROXYADM_MUERTESUBITA'))
 
 # Variables
 FIN = False
@@ -54,6 +47,8 @@ recien_nacido = True
 regexp_ip = re.compile(
   r'\A([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})$')
 ips_localhost = ['127.0.0.1', '::', '::1']
+TLDS = procesar_tlds()
+SQUIDOK = 'ERR'
 
 # El Ciclo de la vida
 try:
@@ -77,7 +72,7 @@ try:
 
     # Validacion del numero de argumentos
     if len(argumentos) < 2:
-      squid_mensaje(mensaje=ArgsError)
+      squid_mensaje(mensaje=ARGSERROR)
       continue
 
     # Inicializamos variables con los argumentos
@@ -86,7 +81,7 @@ try:
 
     # Si la IP es localhost lo dejamos pasar
     if ip_cliente in ips_localhost:
-      squid_mensaje('ERR')
+      squid_mensaje(SQUIDOK)
       continue
 
     # Cache de la asignacion
@@ -101,11 +96,12 @@ try:
       ip_cliente_octeto4 = int(octetos_ip_cliente.group(4))
       asignacion = Asignacion.objects.get(ip__exact=ip_cliente_octeto4)
     except ObjectDoesNotExist:
-      squid_mensaje(mensaje=IPSinAsignacion)
+      squid_mensaje(mensaje=IPSINASIGNACION)
       continue
 
-    except (MultipleObjectsReturned, ValueError, IndexError, re.error):
-      squid_mensaje(mensaje=IPError)
+    except (MultipleObjectsReturned, ValueError, IndexError
+            ,re.error, AttributeError):
+      squid_mensaje(mensaje=IPERROR)
       continue
 
     # Cache del nivel
@@ -113,22 +109,22 @@ try:
 
     # Si el nivel de la asignacion no se debe filtrar
     if not nivel.filtrar:
-      squid_mensaje('ERR')
+      squid_mensaje(SQUIDOK)
       continue
 
     # Si el nivel no tiene acceso a internet
     if nivel.sinaccesoainternet:
-      squid_mensaje(mensaje=AccesoDenegadoSinAccesoAInternet)
+      squid_mensaje(mensaje=ACCESODENEGADOSINACCESOAINTERNET)
       continue
 
     # Si el host se encuentra en la lista de sitios permitidos
     if SitioPermanentementePermitido.objects.extra(where=['%s LIKE dominio'], params=[host]).order_by().exists():
-      squid_mensaje('ERR')
+      squid_mensaje(SQUIDOK)
       continue
 
     # Si el host se encuentra en la lista de sitios denegados
     if SitioPermanentementeDenegado.objects.extra(where=['%s LIKE dominio'], params=[host]).order_by().exists():
-      squid_mensaje(mensaje=AccesoDenegado)
+      squid_mensaje(mensaje=ACCESODENEGADO)
       continue
 
     # Cache del usuario
@@ -138,28 +134,28 @@ try:
 
     # Si el departamento tiene asignaciones/permisos temporales
     if AsignacionTemporalDepartamento.objects.extra(where=['%s LIKE dominio'], params=[host]).filter(departamento__id__exact=departamento.id, fecha_expiracion__gte=fecha_hoy).order_by().exists():
-      squid_mensaje('ERR')
+      squid_mensaje(SQUIDOK)
       continue
 
     # Si el usuario tiene asignaciones/permisos temporales
     if AsignacionTemporalUsuario.objects.extra(where=['%s LIKE dominio'], params=[host]).filter(usuario__id__exact=usuario.id, fecha_expiracion__gte=fecha_hoy).order_by().exists():
-      squid_mensaje('ERR')
+      squid_mensaje(SQUIDOK)
       continue
 
     # Extraemos el dominio efectivo
     try:
-      host_efectivo = obtener_dominio(host, True)
+      host_efectivo = obtener_dominio(host, TLDS, True)
     except ValueError:
-      squid_mensaje(mensaje=DominioInvalido)
+      squid_mensaje(mensaje=DOMINIOINVALIDO)
       continue
 
     # Si el host efectivo se encuentra en la lista de sitios
     if Sitio.objects.filter(categoria__nivel__id__exact=nivel.id, dominio__exact=host_efectivo).order_by().exists():
       if nivel.lista_blanca:
-        squid_mensaje('ERR')
+        squid_mensaje(SQUIDOK)
         continue
       else:
-        squid_mensaje(mensaje=AccesoDenegado)
+        squid_mensaje(mensaje=ACCESODENEGADO)
         continue
 
     # Si el host es el efectivo pero con www,
@@ -171,26 +167,26 @@ try:
     if host != host_efectivo:
       if Sitio.objects.filter(categoria__nivel__id__exact=nivel.id, dominio__exact=host).order_by().exists():
         if nivel.lista_blanca:
-          squid_mensaje('ERR')
+          squid_mensaje(SQUIDOK)
           continue
         else:
-          squid_mensaje(mensaje=AccesoDenegado)
+          squid_mensaje(mensaje=ACCESODENEGADO)
           continue
 
     # No encontramos el registro en las listas negras probablemente sea benigno
     if nivel.lista_blanca:
-      squid_mensaje(mensaje=AccesoDenegado)
+      squid_mensaje(mensaje=ACCESODENEGADO)
     else:
-      squid_mensaje('ERR')
+      squid_mensaje(SQUIDOK)
 
   else:
     close_old_connections()
 
 except ProgrammingError:
-  squid_mensaje(mensaje=EnMantenimiento, registro='EnMantenimiento')
+  squid_mensaje(mensaje=ENMANTENIMIENTO, registro='EnMantenimiento')
 
 except OperationalError:
-  squid_mensaje(mensaje=MuerteSubita, registro='MuerteSubita')
+  squid_mensaje(mensaje=MUERTESUBITA, registro='MuerteSubita')
 
 except EOFError:
   squid_mensaje(mensaje='EOF', registro='EOF')
@@ -199,7 +195,7 @@ except KeyboardInterrupt:
   squid_mensaje(mensaje='KBI', registro='KBI')
 
 except Exception as e:
-  if not en_produccion:
+  if not PRODUCCION:
     sys.stdout.write(f'{str(type(e))}: {str(e)}')
 
   squid_mensaje(mensaje='Error', registro='ErrorExternalACL-Dominio')
