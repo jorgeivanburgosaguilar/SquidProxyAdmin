@@ -10,6 +10,8 @@ El filtrado de los usuarios se hace base a la IP del usuario para una red IPv4 c
    - GRANT ALL PRIVILEGES ON DATABASE proxy TO proxy;
 
 2. Preparar aplicacion
+   - mv example.env .env
+   - [Configurar credenciales bd en .env]
    - virtualenv env
    - env\Scripts\activate
    - pip install -r requirements.txt
@@ -18,14 +20,14 @@ El filtrado de los usuarios se hace base a la IP del usuario para una red IPv4 c
    - python manage.py createsuperuser
    - python manage.py collectstatic
 
-3. Configurar servidor web para panel administrativo
+4. Configurar servidor web para panel administrativo
    - https://docs.djangoproject.com/en/4.2/howto/deployment/
      - Recomiendo apache con mod_wsgi: https://docs.djangoproject.com/en/4.2/howto/deployment/wsgi/modwsgi/
 
-4. Configurar /etc/squid/squid.conf
-   - external_acl_type filtrodominio ttl=300 children-max=50 children-startup=4 children-idle=2 ipv4 %SRC %DST /ruta/hacia/python -u /ruta/hacia/SquidProxyAdmin2/FiltroSquid-CLI/FiltroDominio.py
+5. Configurar /etc/squid/squid.conf
+   - external_acl_type filtrodominio ttl=300 children-max=50 children-startup=4 children-idle=2 ipv4 %SRC %DST /ruta/hacia/python -u /ruta/hacia/SquidProxyAdmin2/cli/filtro_dominio.py
    - acl filtro_dominio external filtrodominio
-   - external_acl_type filtroextensionarchivo ttl=300 children-max=50 children-startup=4 ipv4 children-idle=2 %SRC %PATH /ruta/hacia/python -u /ruta/hacia/SquidProxyAdmin2/FiltroSquid-CLI/FiltroExtensionArchivo.py
+   - external_acl_type filtroextensionarchivo ttl=300 children-max=50 children-startup=4 ipv4 children-idle=2 %SRC %PATH /ruta/hacia/python -u /ruta/hacia/SquidProxyAdmin2/cli/filtro_extensionarchivo.py
    - acl filtro_extension_archivo external filtroextensionarchivo
-   - external_acl_type filtromime ttl=300 children-max=50 children-startup=2 children-idle=2 ipv4 %SRC %<h{Content-Type} /ruta/hacia/python -u /ruta/hacia/SquidProxyAdmin2/FiltroSquid-CLI/FiltroMIME.py
+   - external_acl_type filtromime ttl=300 children-max=50 children-startup=2 children-idle=2 ipv4 %SRC %<h{Content-Type} /ruta/hacia/python -u /ruta/hacia/SquidProxyAdmin2/cli/filtro_mime.py
    - acl filtro_mime external filtromime

@@ -48,7 +48,7 @@ regexp_ip = re.compile(
   r'\A([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})$')
 ips_localhost = ['127.0.0.1', '::', '::1']
 TLDS = procesar_tlds()
-SQUIDOK = 'ERR'
+SQUIDPASS = 'ERR'
 
 # El Ciclo de la vida
 try:
@@ -81,7 +81,7 @@ try:
 
     # Si la IP es localhost lo dejamos pasar
     if ip_cliente in ips_localhost:
-      squid_mensaje(SQUIDOK)
+      squid_mensaje(SQUIDPASS)
       continue
 
     # Cache de la asignacion
@@ -109,7 +109,7 @@ try:
 
     # Si el nivel de la asignacion no se debe filtrar
     if not nivel.filtrar:
-      squid_mensaje(SQUIDOK)
+      squid_mensaje(SQUIDPASS)
       continue
 
     # Si el nivel no tiene acceso a internet
@@ -119,12 +119,12 @@ try:
 
     # Si el host se encuentra en la lista de sitios permitidos
     if SitioPermanentementePermitido.objects.extra(where=['%s LIKE dominio'], params=[host]).order_by().exists():
-      squid_mensaje(SQUIDOK)
+      squid_mensaje(SQUIDPASS)
       continue
 
     # Si el host se encuentra en la lista de sitios denegados
     if SitioPermanentementeDenegado.objects.extra(where=['%s LIKE dominio'], params=[host]).order_by().exists():
-      squid_mensaje(mensaje=ACCESODENEGADO)
+      squid_mensaje(mensaje=SQUIDPASS)
       continue
 
     # Cache del usuario
@@ -134,12 +134,12 @@ try:
 
     # Si el departamento tiene asignaciones/permisos temporales
     if AsignacionTemporalDepartamento.objects.extra(where=['%s LIKE dominio'], params=[host]).filter(departamento__id__exact=departamento.id, fecha_expiracion__gte=fecha_hoy).order_by().exists():
-      squid_mensaje(SQUIDOK)
+      squid_mensaje(SQUIDPASS)
       continue
 
     # Si el usuario tiene asignaciones/permisos temporales
     if AsignacionTemporalUsuario.objects.extra(where=['%s LIKE dominio'], params=[host]).filter(usuario__id__exact=usuario.id, fecha_expiracion__gte=fecha_hoy).order_by().exists():
-      squid_mensaje(SQUIDOK)
+      squid_mensaje(SQUIDPASS)
       continue
 
     # Extraemos el dominio efectivo
@@ -152,7 +152,7 @@ try:
     # Si el host efectivo se encuentra en la lista de sitios
     if Sitio.objects.filter(categoria__nivel__id__exact=nivel.id, dominio__exact=host_efectivo).order_by().exists():
       if nivel.lista_blanca:
-        squid_mensaje(SQUIDOK)
+        squid_mensaje(SQUIDPASS)
         continue
       else:
         squid_mensaje(mensaje=ACCESODENEGADO)
@@ -167,17 +167,17 @@ try:
     if host != host_efectivo:
       if Sitio.objects.filter(categoria__nivel__id__exact=nivel.id, dominio__exact=host).order_by().exists():
         if nivel.lista_blanca:
-          squid_mensaje(SQUIDOK)
+          squid_mensaje(SQUIDPASS)
           continue
         else:
           squid_mensaje(mensaje=ACCESODENEGADO)
           continue
 
-    # No encontramos el registro en las listas negras probablemente sea benigno
+    # No encontramos el registro en las lista bloqueo probablemente sea benigno
     if nivel.lista_blanca:
       squid_mensaje(mensaje=ACCESODENEGADO)
     else:
-      squid_mensaje(SQUIDOK)
+      squid_mensaje(SQUIDPASS)
 
   else:
     close_old_connections()
