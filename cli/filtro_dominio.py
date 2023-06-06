@@ -42,7 +42,7 @@ ENMANTENIMIENTO = quote(os.getenv('SQUIDPROXYADM_ENMANTENIMIENTO'))
 MUERTESUBITA = quote(os.getenv('SQUIDPROXYADM_MUERTESUBITA'))
 
 # Variables
-FIN = False
+fin = False
 recien_nacido = True
 regexp_ip = re.compile(
   r'\A([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})$')
@@ -50,9 +50,8 @@ ips_localhost = ['127.0.0.1', '::', '::1']
 TLDS = procesar_tlds()
 SQUIDPASS = 'ERR'
 
-# El Ciclo de la vida
 try:
-  while not FIN:
+  while not fin:
     # Vaciamos la salida al comenzar
     if recien_nacido:
       recien_nacido = False
@@ -64,7 +63,7 @@ try:
 
     # Si obtiene EOF de Squid
     if not linea:
-      FIN = True
+      fin = True
       continue
 
     # Sanitizacion y separacion de la linea de argumentos entregada
@@ -75,7 +74,7 @@ try:
       squid_mensaje(mensaje=ARGSERROR)
       continue
 
-    # Inicializamos variables con los argumentos
+    # Inicializacion
     ip_cliente = unquote_plus(argumentos[0])
     host = unquote_plus(argumentos[1]).lower()
 

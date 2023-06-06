@@ -7,54 +7,46 @@ import os
 import sys
 import re
 import django
+from django.db import close_old_connections, ProgrammingError, OperationalError
+from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from urllib.parse import quote, unquote_plus, urlparse
-from configparser import ConfigParser
-from funciones import ruta_configuraciones, es_una_ipv4_valida, squid_mensaje
+from funciones import estamos_en_produccion, es_una_ipv4_valida, squid_mensaje
 
 
-# Cargar configuraciones
-config_parser = ConfigParser()
-config_parser.read(os.path.join(
-  ruta_configuraciones(), 'principal.conf'))
-
-# Directivas del Filtro
-en_produccion = config_parser.getboolean('FiltroWeb', 'Produccion')
+# Agregar directorio actual a las rutas del entorno
 current_path = os.path.dirname(os.path.dirname(__file__))
 sys.path.append(current_path)
-
-# Mensajes de Error
-ArgsError = quote(config_parser.get('Mensajes', 'ArgsError'))
-ArgsPathError = quote(config_parser.get('Mensajes', 'ArgsPathError'))
-IPError = quote(config_parser.get('Mensajes', 'IPError'))
-IPSinAsignacion = quote(config_parser.get('Mensajes', 'IPSinAsignacion'))
-AccesoDenegadoExtensionArchivo = quote(
-  config_parser.get('Mensajes', 'AccesoDenegadoExtensionArchivo'))
-AccesoDenegadoSinAccesoAInternet = quote(
-  config_parser.get('Mensajes', 'AccesoDenegadoSinAccesoAInternet'))
-EnMantenimiento = quote(config_parser.get('Mensajes', 'EnMantenimiento'))
-MuerteSubita = quote(config_parser.get('Mensajes', 'MuerteSubita'))
 
 # Cargar backend basado en Django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'SquidProxyAdmin.settings')
 django.setup()
 
-# Importes de Django
-# pylint: disable=wrong-import-position
-from django.db import close_old_connections, ProgrammingError, OperationalError
-from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
+# Importar modelos
 from Administrador.models import Asignacion, ExtensionArchivo, Configuracion
-# pylint: enable=wrong-import-position
+
+# Configuraciones y mensajes de error
+PRODUCCION = estamos_en_produccion()
+ARGSERROR = quote(os.getenv('SQUIDPROXYADM_ARGSERROR'))
+ARGSPATHERROR = quote(os.getenv('SQUIDPROXYADM_ARGSPATHERROR'))
+IPERROR = quote(os.getenv('SQUIDPROXYADM_IPERROR'))
+IPSINASIGNACION = quote(os.getenv('SQUIDPROXYADM_IPSINASIGNACION'))
+ACCESODENEGADOEXTENSIONARCHIVO = quote(
+  os.getenv('SQUIDPROXYADM_ACCESODENEGADOEXTENSIONARCHIVO'))
+ACCESODENEGADOSINACCESOAINTERNET = quote(
+  os.getenv('SQUIDPROXYADM_ACCESODENEGADOSINACCESOAINTERNET'))
+ENMANTENIMIENTO = quote(os.getenv('SQUIDPROXYADM_ENMANTENIMIENTO'))
+MUERTESUBITA = quote(os.getenv('SQUIDPROXYADM_MUERTESUBITA'))
 
 # Variables
-FIN = False
+fin = False
 recien_nacido = True
 regexp_ip = re.compile(
   r'\A([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})$')
 ips_localhost = ['127.0.0.1', '::', '::1']
+SQUIDPASS = 'ERR'
 
-# El Ciclo de la vida
 try:
-  while not FIN:
+  while not fin:
     # Vaciamos la salida al comenzar
     if recien_nacido:
       recien_nacido = False
@@ -66,7 +58,7 @@ try:
 
     # Si obtiene EOF de Squid
     if not linea:
-      FIN = True
+      fin = True
       continue
 
     # Sanitizacion y separacion de la linea de argumentos entregada
@@ -74,30 +66,28 @@ try:
 
     # Validacion del numero de argumentos
     if len(argumentos) < 2:
-      squid_mensaje(mensaje=ArgsError)
+      squid_mensaje(mensaje=ARGSERROR)
       continue
 
-    # Inicializamos variables con los argumentos
+    # Inicializacion
     ip_cliente = unquote_plus(argumentos[0])
     url_path = unquote_plus(argumentos[1]).lower()
 
-    # Verifica que la ruta de la url no sea invalida
+    # Verifica que la ruta de la URL no sea invalida
     if not url_path:
-      squid_mensaje(mensaje=ArgsPathError)
+      squid_mensaje(mensaje=ARGSPATHERROR)
       continue
 
-    # Si la IP del cliente corresponde a una ip conocida de localhost entonces lo dejamos de procesar
+    # Si la IP es localhost lo dejamos pasar
     if ip_cliente in ips_localhost:
-      squid_mensaje('ERR')
+      squid_mensaje(SQUIDPASS)
       continue
 
-    # Variables de sesion
-    asignacion = {}
-    nivel = {}
+    # Cache de la asignacion
+    asignacion: Asignacion = None
 
     # Obtenemos la informacion de la asignacion
     try:
-      # Validacion de la IP
       if not es_una_ipv4_valida(ip_cliente):
         raise ValueError
 
@@ -105,11 +95,12 @@ try:
       ip_cliente_octeto4 = int(octetos_ip_cliente.group(4))
       asignacion = Asignacion.objects.get(ip__exact=ip_cliente_octeto4)
     except ObjectDoesNotExist:
-      squid_mensaje(mensaje=IPSinAsignacion)
+      squid_mensaje(mensaje=IPSINASIGNACION)
       continue
 
-    except (MultipleObjectsReturned, ValueError, IndexError, AttributeError, re.error):
-      squid_mensaje(mensaje=IPError)
+    except (MultipleObjectsReturned, ValueError, IndexError
+            ,re.error, AttributeError):
+      squid_mensaje(mensaje=IPERROR)
       continue
 
     # Cache del nivel
@@ -117,17 +108,17 @@ try:
 
     # Si el nivel de la asignacion no se debe filtrar
     if not nivel.filtrar:
-      squid_mensaje('ERR')
+      squid_mensaje(SQUIDPASS)
       continue
 
-    # Si el nivel no tiene acceso a internet entonces le denegamos el acceso a todos los recursos de internet (Ejemplo: Nivel Sin Acceso a Internet)
+    # Si el nivel no tiene acceso a internet
     if nivel.sinaccesoainternet:
-      squid_mensaje(mensaje=AccesoDenegadoSinAccesoAInternet)
+      squid_mensaje(mensaje=ACCESODENEGADOSINACCESOAINTERNET)
       continue
 
-    # Completo el path para que se vuelva una URI y lo pueda procesar
+    # Completo la ruta para que se vuelva una URL y lo pueda procesar
     # con la libreria estandar urlparse, con la cual puedo obtener
-    # solamente la ruta de la URI sin el query string de una URL,
+    # solamente la ruta de la URL sin el query string,
     # ya que squid nos envia el path junto con la query string
     url_path_extension = ''
     try:
@@ -136,9 +127,11 @@ try:
     except (ValueError, TypeError):
       url_path_extension = ''
 
-    # Si tiene una extension entonces comprobamos si no esta permitida para el nivel de la asignacion
+    # Si tiene una extension entonces comprobamos si
+    # no esta permitida para el nivel de la asignacion
     if url_path_extension:
-      # Obtener el estatus del modo de actualizacion (siempre y cuando el nivel pueda entrar en modo de actualizacion)
+      # Obtener el estatus del modo de actualizacion
+      # (siempre y cuando el nivel pueda entrar en modo de actualizacion)
       permitir_actualizaciones = False
       if nivel.actualizaciones:
         try:
@@ -148,39 +141,41 @@ try:
         except (ObjectDoesNotExist, MultipleObjectsReturned):
           permitir_actualizaciones = False
 
-      # Comprobar si la extension de archivo no esta en la lista negra del nivel (excluyendo o no los que se aceptan al permitir actualizaciones).
-      NoPermitirExtensionArchivo = False
+      # Comprobar si la extension de archivo no esta en
+      # la lista de bloqueo del nivel, excluyendo o no
+      # los que si aceptan al permitir actualizaciones.
+      no_permitir_extension_archivo = False
       if permitir_actualizaciones:
-        NoPermitirExtensionArchivo = ExtensionArchivo.objects.filter(nivel__id__exact=nivel.id).exclude(
+        no_permitir_extension_archivo = ExtensionArchivo.objects.filter(nivel__id__exact=nivel.id).exclude(
           actualizaciones__exact=True).extra(where=['%s LIKE extension'], params=[url_path_extension]).order_by().exists()
       else:
-        NoPermitirExtensionArchivo = ExtensionArchivo.objects.filter(nivel__id__exact=nivel.id).extra(
+        no_permitir_extension_archivo = ExtensionArchivo.objects.filter(nivel__id__exact=nivel.id).extra(
           where=['%s LIKE extension'], params=[url_path_extension]).order_by().exists()
 
-      if NoPermitirExtensionArchivo:
-        squid_mensaje(mensaje=AccesoDenegadoExtensionArchivo)
+      if no_permitir_extension_archivo:
+        squid_mensaje(mensaje=ACCESODENEGADOEXTENSIONARCHIVO)
         continue
 
     # Probablemente la extension del archivo sea benigna
-    squid_mensaje('ERR')
+    squid_mensaje(SQUIDPASS)
 
   else:
     close_old_connections()
 
 except ProgrammingError:
-  squid_mensaje(mensaje=EnMantenimiento, registro='EnMantenimiento')
+  squid_mensaje(mensaje=ENMANTENIMIENTO, registro='EnMantenimiento')
 
 except OperationalError:
-  squid_mensaje(mensaje=MuerteSubita, registro='MuerteSubita')
+  squid_mensaje(mensaje=MUERTESUBITA, registro='MuerteSubita')
 
 except EOFError:
   squid_mensaje(mensaje='EOF', registro='EOF')
 
 except KeyboardInterrupt:
-  squid_mensaje(mensaje='Interrupcion_del_Teclado', registro='KBI')
+  squid_mensaje(mensaje='KBI', registro='KBI')
 
 except Exception as e:
-  if not en_produccion:
+  if not PRODUCCION:
     sys.stdout.write(f'{str(type(e))}: {str(e)}')
 
   squid_mensaje(mensaje='Error', registro='ErrorExternalACL-ExtensionArchivo')
