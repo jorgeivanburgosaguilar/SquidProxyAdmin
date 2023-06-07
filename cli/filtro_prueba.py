@@ -6,11 +6,13 @@ ACL Externa para Squid 3.5
 import sys
 from urllib.parse import quote
 
-EOF = False
-while not EOF:
+fin = False
+
+while not fin:
   line = sys.stdin.readline()
+
   if not line:
-    EOF = True
+    fin = True
     continue
 
   sys.stdout.write(f'OK message={line} log={quote(line)}\n')
