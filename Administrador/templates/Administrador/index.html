@@ -5,48 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Asignaciones | Squid Proxy Admin</title>
 
+    {% load bootstrap5 %}
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+
     {% load static %}
-    <link
-      href="{% static 'Administrador/css/bootstrap.min.css' %}"
-      media="all"
-      rel="stylesheet"
-    />
-    <link
-      href="{% static 'Administrador/css/bootstrap-theme.min.css' %}"
-      media="all"
-      rel="stylesheet"
-    />
     <link
       href="{% static 'Administrador/img/favicon.ico' %}"
       media="all"
       rel="icon"
     />
-
-    <style type="text/css">
-      body {
-        padding-top: 20px;
-      }
-    </style>
   </head>
   <body>
-    <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+    <nav class="navbar navbar-fixed-top navbar-dark bg-dark" role="navigation">
       <div class="container">
-        <div class="navbar-header">
-          <a class="navbar-brand" href="#">Squid Proxy Admin</a>
-        </div>
-        <div id="navbar" class="navbar-collapse collapse">
-          <ul class="nav navbar-nav navbar-right">
-            <li>
-              <p class="navbar-btn">
-                <a
-                  href="{% url 'admin:index' %}"
-                  class="btn btn-success"
-                  role="button"
-                  >Administrar</a
-                >
-              </p>
-            </li>
-          </ul>
+        <a class="navbar-brand" href="#">Squid Proxy Admin</a>
+        <div class="d-flex">
+          <a
+            href="{% url 'admin:index' %}"
+            class="btn btn-success"
+            role="button"
+            >Administrar</a
+          >
         </div>
       </div>
     </nav>
@@ -107,8 +87,5 @@
         </table>
       </div>
     </div>
-
-    <script src="{% static 'Administrador/js/jquery.min.js' %}"></script>
-    <script src="{% static 'Administrador/js/bootstrap.min.js' %}"></script>
   </body>
 </html>
