@@ -91,15 +91,12 @@ try:
       if not es_una_ipv4_valida(ip_cliente):
         raise ValueError
 
-      octetos_ip_cliente = regexp_ip.search(ip_cliente)
-      ip_cliente_octeto4 = int(octetos_ip_cliente.group(4))
-      asignacion = Asignacion.objects.get(ip__exact=ip_cliente_octeto4)
+      asignacion = Asignacion.objects.get(ip__exact=ip_cliente)
     except ObjectDoesNotExist:
       squid_mensaje(mensaje=IPSINASIGNACION)
       continue
 
-    except (MultipleObjectsReturned, ValueError, IndexError
-            ,re.error, AttributeError):
+    except (MultipleObjectsReturned, ValueError, AttributeError):
       squid_mensaje(mensaje=IPERROR)
       continue
 
@@ -123,7 +120,7 @@ try:
 
     # Si el host se encuentra en la lista de sitios denegados
     if SitioPermanentementeDenegado.objects.extra(where=['%s LIKE dominio'], params=[host]).order_by().exists():
-      squid_mensaje(mensaje=SQUIDPASS)
+      squid_mensaje(mensaje=ACCESODENEGADO)
       continue
 
     # Cache del usuario

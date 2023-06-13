@@ -25,7 +25,7 @@ try:
   asignaciones = Asignacion.objects.all().values('ip', 'mac')
   for asignacion in asignaciones:
     sys.stdout.write(
-      f'dhcp-host={asignacion["mac"].upper()},192.168.2.{asignacion["ip"]}\n')
+      f'dhcp-host={asignacion["mac"].upper()},{asignacion["ip"]}\n')
 except Exception as e:
   if not PRODUCCION:
     sys.stdout.write(f'{str(type(e))}: {str(e)}')
