@@ -85,7 +85,7 @@
           <tbody>
             {% for asignacion in asignaciones %}
             <tr>
-              <td>192.168.2.{{ asignacion.ip }}</td>
+              <td>{{ asignacion.ip }}</td>
               <td>{{ asignacion.mac }}</td>
               <td>{{ asignacion.nombre_equipo }}</td>
               <td>{{ asignacion.usuario__nombre }}</td>

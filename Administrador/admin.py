@@ -23,24 +23,13 @@ class UsuarioAdmin(SimpleHistoryAdmin):
 
 @admin.register(models.Categoria)
 class CategoriaAdmin(SimpleHistoryAdmin):
-  list_display = ('nombre', 'descripcion', 'ruta', 'interna')
-
-
-@admin.register(models.TipoMime)
-class TipoMimeAdmin(SimpleHistoryAdmin):
-  list_display = ('mime', 'actualizaciones')
-
-
-@admin.register(models.ExtensionArchivo)
-class ExtensionArchivoAdmin(SimpleHistoryAdmin):
-  list_display = ('extension', 'actualizaciones')
+  list_display = ('nombre', 'descripcion', 'ruta')
 
 
 @admin.register(models.Nivel)
 class NivelAdmin(SimpleHistoryAdmin):
-  list_display = ('nombre', 'filtrar', 'sinaccesoainternet',
-                  'actualizaciones', 'lista_blanca')
-  filter_horizontal = ('categorias', 'tipos_mime', 'extensiones_archivos')
+  list_display = ('nombre', 'filtrar', 'sinaccesoainternet', 'lista_blanca')
+  filter_horizontal = ('categorias', )
 
 
 @admin.register(models.Sitio)
@@ -87,24 +76,16 @@ class AsignacionAdminForm(forms.ModelForm):
     super(AsignacionAdminForm, self).__init__(*args, **kwargs)
     self.fields['usuario'].queryset = models.Usuario.objects.filter(
       activo__exact=True)
-    self.fields['ip'].choices = self.instance.obtener_ips_disponibles(
-      para_admin=True)
 
 
 @admin.register(models.Asignacion)
 class AsignacionAdmin(SimpleHistoryAdmin):
-  list_display = ('obtener_ip', 'mac', 'nombre_equipo', 'usuario',
+  list_display = ('ip', 'mac', 'nombre_equipo', 'usuario',
                   'obtener_departamento_usuario', 'nivel', 'equipo',
                   'tipo_conexion', 'ultima_actualizacion')
   list_max_show_all = 255
   list_per_page = 255
   form = AsignacionAdminForm
-
-
-@admin.register(models.Configuracion)
-class ConfiguracionAdmin(SimpleHistoryAdmin):
-  list_display = ('nombre', 'valor', 'ultima_actualizacion')
-  search_fields = ['nombre']
 
 
 admin.site.site_header = 'Administración del Proxy'
