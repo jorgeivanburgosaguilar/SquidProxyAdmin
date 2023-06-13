@@ -1,7 +1,7 @@
 # SquidProxyAdmin
 
-Filtro externo para Squid 3.x para implementar un control de acceso por dominio, mime y la extension de los archivos a los usuarios con acceso al proxy.
-El filtrado de los usuarios se hace base a la IP del usuario para una red IPv4 clase C (/24).
+Filtro externo para Squid 3.x para implementar un control de acceso por dominio a los usuarios con acceso al proxy.
+El filtrado de los usuarios se hace base a la IP del usuario (IPv4).
 
 ## Instrucciones para instalar
 1. Crear base de datos en postgresql:
@@ -27,7 +27,3 @@ El filtrado de los usuarios se hace base a la IP del usuario para una red IPv4 c
 5. Configurar /etc/squid/squid.conf
    - external_acl_type filtrodominio ttl=300 children-max=50 children-startup=4 children-idle=2 ipv4 %SRC %DST /ruta/hacia/python -u /ruta/hacia/SquidProxyAdmin2/cli/filtro_dominio.py
    - acl filtro_dominio external filtrodominio
-   - external_acl_type filtroextensionarchivo ttl=300 children-max=50 children-startup=4 ipv4 children-idle=2 %SRC %PATH /ruta/hacia/python -u /ruta/hacia/SquidProxyAdmin2/cli/filtro_extensionarchivo.py
-   - acl filtro_extension_archivo external filtroextensionarchivo
-   - external_acl_type filtromime ttl=300 children-max=50 children-startup=2 children-idle=2 ipv4 %SRC %<h{Content-Type} /ruta/hacia/python -u /ruta/hacia/SquidProxyAdmin2/cli/filtro_mime.py
-   - acl filtro_mime external filtromime
