@@ -4,11 +4,9 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Asignaciones | Squid Proxy Admin</title>
-
     {% load bootstrap5 %}
     {% bootstrap_css %}
     {% bootstrap_javascript %}
-
     {% load static %}
     <link
       href="{% static 'Administrador/img/favicon.ico' %}"
@@ -30,16 +28,14 @@
         </div>
       </div>
     </nav>
-
     <div class="container-fluid">
-      <div class="page-header">
+      <div class="mb-2 border-bottom">
         <h1>Asignaciones</h1>
       </div>
-
       <div class="table-responsive">
         <table class="table table-striped table-bordered table-hover">
           <thead>
-            <tr>
+            <tr class="text-center align-middle">
               <th>IP</th>
               <th>MAC</th>
               <th>Nombre del Equipo</th>
@@ -51,7 +47,7 @@
             </tr>
           </thead>
           <tfoot>
-            <tr>
+            <tr class="text-center align-middle">
               <th>IP</th>
               <th>MAC</th>
               <th>Nombre del Equipo</th>
@@ -64,7 +60,7 @@
           </tfoot>
           <tbody>
             {% for asignacion in asignaciones %}
-            <tr>
+            <tr class="text-center align-middle">
               <td>{{ asignacion.ip }}</td>
               <td>{{ asignacion.mac }}</td>
               <td>{{ asignacion.nombre_equipo }}</td>
