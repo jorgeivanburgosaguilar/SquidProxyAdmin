@@ -1,8 +1,13 @@
 '''
 Admin
 '''
+import os
+import ipaddress
 from django import forms
 from django.contrib import admin
+from django.core.validators import validate_ipv46_address
+from django.core.exceptions import ValidationError
+from django.forms.widgets import Select, TextInput
 from simple_history.admin import SimpleHistoryAdmin
 from Administrador import models
 
@@ -71,11 +76,70 @@ class EquipoAdmin(SimpleHistoryAdmin):
   search_fields = ['nombre']
 
 
+class IPFieldWidget(forms.MultiWidget):
+  def __init__(self, choices=None, attrs=None):
+    choices = [('---------', '---------')] + choices
+    widgets = [
+        Select(choices=choices),
+        TextInput(attrs=attrs)
+    ]
+    super().__init__(widgets, attrs)
+
+  def decompress(self, value):
+    if value:
+      return [value, value]
+    return ['---------', '---------']
+
+
+class IPField(forms.MultiValueField):
+  def __init__(self, *args, **kwargs):
+    fields = (
+        forms.CharField(max_length=45),
+        forms.CharField(max_length=45, validators=[validate_ipv46_address])
+    )
+    choices = kwargs.pop('choices', None)
+    widget = IPFieldWidget(choices=choices, attrs=kwargs.pop('attrs', None))
+    super().__init__(fields=fields, widget=widget, *args, **kwargs)
+
+  def compress(self, data_list):
+    if data_list[0] == '---------':
+      if data_list[1]:
+        try:
+          ipaddress.ip_address(data_list[1])
+        except ValueError as exc:
+          raise ValidationError('Please enter a valid IP address.') from exc
+        return data_list[1]
+      return None
+    if data_list[0]:
+      return data_list[0]
+    return ''
+
+  def validate(self, value):
+    super().validate(value)
+    if value[0] == '---------' and not value[1]:
+      raise ValidationError('Please enter a valid IP address.')
+
+
 class AsignacionAdminForm(forms.ModelForm):
   def __init__(self, *args, **kwargs):
-    super(AsignacionAdminForm, self).__init__(*args, **kwargs)
+    super().__init__(*args, **kwargs)
     self.fields['usuario'].queryset = models.Usuario.objects.filter(
       activo__exact=True)
+    es_ipv6 = os.getenv('SQUIDPROXYADM_ESIPV6', 'False') == 'True'
+    iprange = os.getenv('SQUIDPROXYADM_IPRANGE')
+    available_ips: list[tuple[str, str]] = None
+    if (es_ipv6):
+      available_ips = [
+        (str(ip), str(ip))
+        for ip in ipaddress.IPv6Network(iprange).hosts()
+      ]
+    else:
+      available_ips = [
+          (str(ip), str(ip))
+          for ip in ipaddress.IPv4Network(iprange).hosts()
+      ]
+    self.fields['ip'] = IPField(choices=available_ips,
+                                validators=[validate_ipv46_address], label='IP')
 
 
 @admin.register(models.Asignacion)
