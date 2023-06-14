@@ -136,5 +136,17 @@ STATIC_URL = '/static/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+BOOTSTRAP5 = {
+  'css_url': {
+      'href': '/static/Administrador/css/bootstrap.min.css',
+      'integrity': 'sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM',
+      'crossorigin': 'anonymous',
+  },
+  'javascript_url': {
+      'url': '/static/Administrador/js/bootstrap.bundle.min.js',
+      'integrity': 'sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz',
+      'crossorigin': 'anonymous',
+  },
+}
