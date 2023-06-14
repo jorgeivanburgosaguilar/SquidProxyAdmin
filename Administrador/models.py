@@ -2,7 +2,7 @@
 Models
 '''
 from django.db import models
-from django.core.validators import MaxValueValidator
+from django.core.validators import MaxValueValidator, validate_ipv46_address
 from simple_history.models import HistoricalRecords
 
 
@@ -172,8 +172,10 @@ class Asignacion(models.Model):
   equipo = models.ForeignKey(Equipo, on_delete=models.CASCADE)
   tipo_conexion = models.PositiveSmallIntegerField(choices=TipoConexion.choices, default=TipoConexion.LAN, validators=[
                                                    MaxValueValidator(2)], verbose_name='tipo de conexion')
-  ip = models.CharField(max_length=45, unique=True, verbose_name='IP')
-  mac = models.CharField(max_length=17, unique=True, verbose_name='MAC')
+  ip = models.CharField(max_length=45, unique=True, validators=[validate_ipv46_address], verbose_name='IP',
+                        help_text='Dirección IP en formato IPv4 o IPv6. Ejemplo: 192.168.1.254')
+  mac = models.CharField(max_length=17, unique=True, verbose_name='MAC',
+                         help_text='Dirección MAC en formato largo. Ejemplo: A1:B2:C3:D4:E5:F6')
   fecha_creacion = models.DateTimeField(
     auto_now_add=True, verbose_name='fecha de creacion')
   ultima_actualizacion = models.DateTimeField(
