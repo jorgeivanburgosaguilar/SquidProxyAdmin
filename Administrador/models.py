@@ -1,6 +1,7 @@
 '''
 Models
 '''
+import os
 from django.db import models
 from django.core.validators import MaxValueValidator
 from simple_history.models import HistoricalRecords
@@ -165,7 +166,6 @@ class Asignacion(models.Model):
     LAN = 1
     WLAN = 2
 
-  IP_CHOICES = [(i, f'192.168.2.{i}') for i in range(1, 255)]
   usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
   nivel = models.ForeignKey(Nivel, on_delete=models.CASCADE)
   nombre_equipo = models.CharField(max_length=256, blank=True, verbose_name='nombre del equipo',
@@ -173,8 +173,9 @@ class Asignacion(models.Model):
   equipo = models.ForeignKey(Equipo, on_delete=models.CASCADE)
   tipo_conexion = models.PositiveSmallIntegerField(choices=TipoConexion.choices, default=TipoConexion.LAN, validators=[
                                                    MaxValueValidator(2)], verbose_name='tipo de conexion')
-  ip = models.PositiveSmallIntegerField(choices=IP_CHOICES, unique=True, validators=[
-                                        MaxValueValidator(254)], verbose_name='IP')
+  ip = models.PositiveSmallIntegerField(unique=True,
+                                        validators=[MaxValueValidator(254)],
+                                        verbose_name='IP')
   mac = models.CharField(max_length=17, unique=True, verbose_name='MAC',
                          help_text='Dirección MAC en formato largo. Ejemplo: A1:B2:C3:D4:E5:F6')
   fecha_creacion = models.DateTimeField(
@@ -185,17 +186,17 @@ class Asignacion(models.Model):
 
   def obtener_ips_disponibles(self, para_admin=False):
     'Obtiene las IPs que quedan disponibles incluyendo la de la instancia actual.'
-    ips_rango_dinamico = range(195, 200)
-    ips_asignadas = Asignacion.objects.values_list('ip', flat=True)
-    ips_ocupadas = list(ips_asignadas) + list(ips_rango_dinamico)
+    ips_rango_dinamico = list(range(195, 200))
+    ips_asignadas = list(Asignacion.objects.values_list('ip', flat=True))
+    ips_ocupadas = ips_asignadas + ips_rango_dinamico
     ips_disponibles = []
 
     if para_admin:
       ips_disponibles.append(('', '---------'))
 
-    for choice in self.IP_CHOICES:
-      if (choice[0] not in ips_ocupadas) or (choice[0] == self.ip):
-        ips_disponibles.append(choice)
+    for dirrecion_ip in range(1, 255):
+      if (dirrecion_ip not in ips_ocupadas) or (dirrecion_ip == self.ip):
+        ips_disponibles.append(dirrecion_ip)
 
     return ips_disponibles
 
@@ -207,7 +208,7 @@ class Asignacion(models.Model):
 
   def obtener_ip(self):
     'Obtiene la IP completa relacionada con la asignacion'
-    return self.IP_CHOICES[self.ip - 1][1]
+    return f'{os.getenv("SQUIDPROXYADM_IPPREFIX")}.{self.ip}'
 
   obtener_ip.short_description = 'IP'
   obtener_ip.admin_order_field = 'ip'
