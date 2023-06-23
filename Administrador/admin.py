@@ -4,6 +4,7 @@ Admin
 import ipaddress
 from django import forms
 from django.contrib import admin
+from django.core.exceptions import ObjectDoesNotExist
 from simple_history.admin import SimpleHistoryAdmin
 from Administrador import models
 
@@ -71,6 +72,7 @@ class EquipoAdmin(SimpleHistoryAdmin):
   list_per_page = 400
   search_fields = ['nombre']
 
+
 @admin.register(models.Red)
 class RedAdmin(SimpleHistoryAdmin):
   list_display = ('nombre', 'cidr', 'inicio_dhcp', 'fin_dhcp')
@@ -90,19 +92,23 @@ class AsignacionAdminForm(forms.ModelForm):
   def obtener_ips_disponibles(self):
     'Obtiene las IPs que quedan disponibles.'
     ip_list = [('', '---------')]
-    network = ipaddress.ip_network('192.168.2.0/24')
-    ips_asignadas = list(
-      models.Asignacion.objects.values_list('ip', flat=True))
-    ips_rango_dinamico = self.generar_rango_ip(
-      network, '192.168.2.195', '192.168.2.199')
-    ips_ocupadas = tuple(ips_asignadas + ips_rango_dinamico)
+    try:
+      red = self.instance.red
+      network = ipaddress.ip_network(red.cidr)
+      ips_asignadas = list(
+        models.Asignacion.objects.values_list('ip', flat=True))
+      ips_rango_dinamico = self.generar_rango_ip(
+        network, red.inicio_dhcp, red.fin_dhcp)
+      ips_ocupadas = tuple(ips_asignadas + ips_rango_dinamico)
 
-    for ip in network.hosts():
-      ip_str = str(ip)
-      if ip_str not in ips_ocupadas or ip_str == self.instance.ip:
-        ip_list.append((ip_str, ip_str))
+      for ip in network.hosts():
+        ip_str = str(ip)
+        if ip_str not in ips_ocupadas or ip_str == self.instance.ip:
+          ip_list.append((ip_str, ip_str))
 
-    return tuple(ip_list)
+      return tuple(ip_list)
+    except ObjectDoesNotExist:
+      return ip_list
 
   def generar_rango_ip(self, network, inicio_dhcp, fin_dhcp):
     start_ip = ipaddress.ip_address(inicio_dhcp)
