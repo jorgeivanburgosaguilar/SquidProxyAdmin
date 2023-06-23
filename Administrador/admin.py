@@ -77,26 +77,30 @@ class AsignacionAdminForm(forms.ModelForm):
     super().__init__(*args, **kwargs)
     self.fields['usuario'].queryset = models.Usuario.objects.filter(
       activo__exact=True)
-    ip_choices = self.obtener_ips_disponibles()
-    self.fields['ip'].widget = forms.Select(choices=ip_choices)
+    self.fields['ip'].widget = forms.Select(
+      choices=self.obtener_ips_disponibles())
 
   def obtener_ips_disponibles(self):
-    'Obtiene las IPs que quedan disponibles incluyendo la de la instancia actual.'
-    ips_asignadas = tuple(
-      models.Asignacion.objects.values_list('ip', flat=True))
-    # ips_rango_dinamico = list(range(195, 200))
-    # ips_ocupadas = ips_asignadas + ips_rango_dinamico
-    # ips_disponibles = []
-    # ips_disponibles.append(('', '---------'))
-
+    'Obtiene las IPs que quedan disponibles.'
     ip_list = [('', '---------')]
     network = ipaddress.ip_network('192.168.2.0/24')
+    ips_asignadas = list(
+      models.Asignacion.objects.values_list('ip', flat=True))
+    ips_rango_dinamico = self.generar_rango_ip(
+      network, '192.168.2.195', '192.168.2.199')
+    ips_ocupadas = tuple(ips_asignadas + ips_rango_dinamico)
+
     for ip in network.hosts():
       ip_str = str(ip)
-      if ip_str not in ips_asignadas or ip_str == self.instance.ip:
+      if ip_str not in ips_ocupadas or ip_str == self.instance.ip:
         ip_list.append((ip_str, ip_str))
 
     return tuple(ip_list)
+
+  def generar_rango_ip(self, network, inicio_dhcp, fin_dhcp):
+    start_ip = ipaddress.ip_address(inicio_dhcp)
+    end_ip = ipaddress.ip_address(fin_dhcp)
+    return [str(ip) for ip in network if start_ip <= ip <= end_ip]
 
 
 @admin.register(models.Asignacion)
