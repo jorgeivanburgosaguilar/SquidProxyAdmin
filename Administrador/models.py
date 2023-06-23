@@ -1,9 +1,8 @@
 '''
 Models
 '''
-import os
 from django.db import models
-from django.core.validators import MaxValueValidator
+from django.core.validators import MaxValueValidator, validate_ipv46_address
 from simple_history.models import HistoricalRecords
 
 
@@ -173,9 +172,9 @@ class Asignacion(models.Model):
   equipo = models.ForeignKey(Equipo, on_delete=models.CASCADE)
   tipo_conexion = models.PositiveSmallIntegerField(choices=TipoConexion.choices, default=TipoConexion.LAN, validators=[
                                                    MaxValueValidator(2)], verbose_name='tipo de conexion')
-  ip = models.PositiveSmallIntegerField(unique=True,
-                                        validators=[MaxValueValidator(254)],
-                                        verbose_name='IP')
+  ip = models.CharField(unique=True, max_length=45,
+                        validators=[validate_ipv46_address],
+                        verbose_name='IP')
   mac = models.CharField(max_length=17, unique=True, verbose_name='MAC',
                          help_text='Dirección MAC en formato largo. Ejemplo: A1:B2:C3:D4:E5:F6')
   fecha_creacion = models.DateTimeField(
@@ -184,34 +183,11 @@ class Asignacion(models.Model):
     auto_now=True, verbose_name='ultima actualizacion')
   history = HistoricalRecords()
 
-  def obtener_ips_disponibles(self, para_admin=False):
-    'Obtiene las IPs que quedan disponibles incluyendo la de la instancia actual.'
-    ips_rango_dinamico = list(range(195, 200))
-    ips_asignadas = list(Asignacion.objects.values_list('ip', flat=True))
-    ips_ocupadas = ips_asignadas + ips_rango_dinamico
-    ips_disponibles = []
-
-    if para_admin:
-      ips_disponibles.append(('', '---------'))
-
-    for dirrecion_ip in range(1, 255):
-      if (dirrecion_ip not in ips_ocupadas) or (dirrecion_ip == self.ip):
-        ips_disponibles.append(dirrecion_ip)
-
-    return ips_disponibles
-
   def obtener_departamento_usuario(self):
     'Obtiene el nombre del departamento al que el usuario de la asignacion pertenece'
     return self.usuario.departamento.nombre
 
   obtener_departamento_usuario.short_description = 'Departamento'
-
-  def obtener_ip(self):
-    'Obtiene la IP completa relacionada con la asignacion'
-    return f'{os.getenv("SQUIDPROXYADM_IPPREFIX")}.{self.ip}'
-
-  obtener_ip.short_description = 'IP'
-  obtener_ip.admin_order_field = 'ip'
 
   class Meta:
     ordering = ['ip']
@@ -220,4 +196,4 @@ class Asignacion(models.Model):
     verbose_name_plural = 'asignaciones'
 
   def __str__(self):
-    return self.obtener_ip()
+    return str(self.ip)
