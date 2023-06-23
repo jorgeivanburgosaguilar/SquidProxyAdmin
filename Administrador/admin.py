@@ -71,6 +71,13 @@ class EquipoAdmin(SimpleHistoryAdmin):
   list_per_page = 400
   search_fields = ['nombre']
 
+@admin.register(models.Red)
+class RedAdmin(SimpleHistoryAdmin):
+  list_display = ('nombre', 'cidr', 'inicio_dhcp', 'fin_dhcp')
+  list_max_show_all = 400
+  list_per_page = 400
+  search_fields = ['nombre']
+
 
 class AsignacionAdminForm(forms.ModelForm):
   def __init__(self, *args, **kwargs):

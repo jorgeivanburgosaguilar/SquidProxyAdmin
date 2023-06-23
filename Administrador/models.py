@@ -159,6 +159,29 @@ class Equipo(models.Model):
     return str(self.nombre)
 
 
+class Red(models.Model):
+  nombre = models.CharField(max_length=256)
+  cidr = models.CharField(max_length=50, verbose_name='CIDR',
+                          help_text='Formato CIDR compatible con IPv4 e IPv6')
+  inicio_dhcp = models.CharField(max_length=45, blank=True,
+                                 validators=[validate_ipv46_address],
+                                 verbose_name='Inicio Rango DHCP',
+                                 help_text='Formato IPv4 ó IPv6')
+  fin_dhcp = models.CharField(max_length=45, blank=True,
+                              validators=[validate_ipv46_address],
+                              verbose_name='Fin Rango DHCP',
+                              help_text='Formato IPv4 ó IPv6')
+  history = HistoricalRecords()
+
+  class Meta:
+    ordering = ['nombre']
+    verbose_name = 'red'
+    verbose_name_plural = 'redes'
+
+  def __str__(self):
+    return str(self.nombre)
+
+
 class Asignacion(models.Model):
   class TipoConexion(models.IntegerChoices):
     OTRO = 0
@@ -172,6 +195,7 @@ class Asignacion(models.Model):
   equipo = models.ForeignKey(Equipo, on_delete=models.CASCADE)
   tipo_conexion = models.PositiveSmallIntegerField(choices=TipoConexion.choices, default=TipoConexion.LAN, validators=[
                                                    MaxValueValidator(2)], verbose_name='tipo de conexion')
+  red = models.ForeignKey(Red, on_delete=models.CASCADE)
   ip = models.CharField(unique=True, max_length=45,
                         validators=[validate_ipv46_address],
                         verbose_name='IP')
