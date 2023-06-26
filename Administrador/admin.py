@@ -125,6 +125,9 @@ class AsignacionAdmin(SimpleHistoryAdmin):
   list_per_page = 255
   form = AsignacionAdminForm
 
+  class Media:
+    js = ['Administrador/js/asignacion_admin.js']
+
 
 admin.site.site_header = 'Administración del Proxy'
 admin.site.site_title = 'Administración del Proxy'
