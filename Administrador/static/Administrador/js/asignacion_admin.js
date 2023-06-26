@@ -4,16 +4,18 @@ window.onload = function () {
       "use strict";
       function reloadIPDropdown() {
         const redSelect = $("#id_red");
+        const ipSelect = $("#id_ip");
         if (redSelect.length === 0) return;
+        const currentValue = ipSelect.val();
 
         redSelect.on("change", function () {
           const selectedRed = $(this).val();
-          const ipSelect = $("#id_ip");
 
           $.ajax({
             url: "/admin/update-ip-choices/",
             data: {
               red_id: selectedRed,
+              current_value: currentValue,
             },
           })
             .done(function (data) {
@@ -24,6 +26,9 @@ window.onload = function () {
                   .text(choice[1]);
               });
               ipSelect.append(options);
+              if (currentValue) {
+                ipSelect.val(currentValue);
+              }
             })
             .fail(function () {
               ipSelect.empty();

@@ -20,11 +20,12 @@ def index(request):
 
 def update_ip_choices(request):
   red_id = request.GET.get('red_id')
-  ip_choices = get_updated_ip_choices(red_id)
+  current_value = request.GET.get('current_value')
+  ip_choices = get_updated_ip_choices(red_id, current_value)
   return JsonResponse(ip_choices)
 
 
-def get_updated_ip_choices(red_id):
+def get_updated_ip_choices(red_id, current_value):
   ip_choices = [('', '---------')]
   try:
     if not red_id:
@@ -44,7 +45,7 @@ def get_updated_ip_choices(red_id):
 
     for ip in network.hosts():
       ip_str = str(ip)
-      if ip_str not in ips_ocupadas:
+      if ip_str not in ips_ocupadas or ip_str == current_value:
         ip_choices.append((ip_str, ip_str))
 
   except (Red.DoesNotExist, ValueError):

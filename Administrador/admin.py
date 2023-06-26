@@ -1,10 +1,8 @@
 '''
 Admin
 '''
-import ipaddress
 from django import forms
 from django.contrib import admin
-from django.core.exceptions import ObjectDoesNotExist
 from simple_history.admin import SimpleHistoryAdmin
 from Administrador import models
 
@@ -86,7 +84,14 @@ class AsignacionAdminForm(forms.ModelForm):
     super().__init__(*args, **kwargs)
     self.fields['usuario'].queryset = models.Usuario.objects.filter(
       activo__exact=True)
-    self.fields['ip'].widget = forms.Select(choices=(('', '---------'),))
+    self.fields['ip'].widget = forms.Select(choices=self.generar_opciones())
+
+  def generar_opciones(self):
+    ip_list = [('', '---------')]
+    if not self.instance.ip:
+      return tuple(ip_list)
+
+    return tuple(ip_list + [(f'{self.instance.ip}', f'{self.instance.ip}')])
 
 
 @admin.register(models.Asignacion)
