@@ -4,6 +4,7 @@ window.onload = function () {
       "use strict";
       function reloadIPDropdown() {
         const redSelect = $("#id_red");
+        if (redSelect.length === 0) return;
 
         redSelect.on("change", function () {
           const selectedRed = $(this).val();
@@ -31,9 +32,7 @@ window.onload = function () {
         });
       }
 
-      $(document).ready(function () {
-        reloadIPDropdown();
-      });
+      reloadIPDropdown();
     })(django.jQuery);
   }
 };

@@ -86,34 +86,7 @@ class AsignacionAdminForm(forms.ModelForm):
     super().__init__(*args, **kwargs)
     self.fields['usuario'].queryset = models.Usuario.objects.filter(
       activo__exact=True)
-    self.fields['ip'].widget = forms.Select(
-      choices=self.obtener_ips_disponibles())
-
-  def obtener_ips_disponibles(self):
-    'Obtiene las IPs que quedan disponibles.'
-    ip_list = [('', '---------')]
-    try:
-      red = self.instance.red
-      network = ipaddress.ip_network(red.cidr)
-      ips_asignadas = list(
-        models.Asignacion.objects.values_list('ip', flat=True))
-      ips_rango_dinamico = self.generar_rango_ip(
-        network, red.inicio_dhcp, red.fin_dhcp)
-      ips_ocupadas = tuple(ips_asignadas + ips_rango_dinamico)
-
-      for ip in network.hosts():
-        ip_str = str(ip)
-        if ip_str not in ips_ocupadas or ip_str == self.instance.ip:
-          ip_list.append((ip_str, ip_str))
-
-      return tuple(ip_list)
-    except ObjectDoesNotExist:
-      return ip_list
-
-  def generar_rango_ip(self, network, inicio_dhcp, fin_dhcp):
-    start_ip = ipaddress.ip_address(inicio_dhcp)
-    end_ip = ipaddress.ip_address(fin_dhcp)
-    return [str(ip) for ip in network if start_ip <= ip <= end_ip]
+    self.fields['ip'].widget = forms.Select(choices=(('', '---------'),))
 
 
 @admin.register(models.Asignacion)
