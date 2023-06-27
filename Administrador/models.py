@@ -1,8 +1,11 @@
 '''
 Models
 '''
+import re
+import netaddr
 from django.db import models
 from django.core.validators import MaxValueValidator, validate_ipv46_address
+from django.core.exceptions import ValidationError
 from simple_history.models import HistoricalRecords
 
 
@@ -188,6 +191,21 @@ class Red(models.Model):
     return str(self.nombre)
 
 
+def validate_mac_address(mac_address):
+  try:
+    patron = r'^([0-9A-Fa-f.:-]){12,17}$'
+    if not re.match(patron, mac_address):
+      raise ValueError
+  except (re.error, ValueError) as exc:
+    raise ValidationError('Direccion MAC invalida.') from exc
+
+
+def format_mac_address(mac_address):
+  mac = netaddr.EUI(mac_address)
+  mac.dialect = netaddr.mac_unix_expanded
+  return str(mac).upper()
+
+
 class Asignacion(models.Model):
   class TipoConexion(models.IntegerChoices):
     OTRO = 0
@@ -206,12 +224,17 @@ class Asignacion(models.Model):
                         validators=[validate_ipv46_address],
                         verbose_name='IP')
   mac = models.CharField(max_length=17, unique=True, verbose_name='MAC',
+                         validators=[validate_mac_address],
                          help_text='Dirección MAC en formato largo. Ejemplo: A1:B2:C3:D4:E5:F6')
   fecha_creacion = models.DateTimeField(
     auto_now_add=True, verbose_name='fecha de creacion')
   ultima_actualizacion = models.DateTimeField(
     auto_now=True, verbose_name='ultima actualizacion')
   history = HistoricalRecords()
+
+  def save(self, *args, **kwargs):
+    self.mac = format_mac_address(self.mac)
+    super().save(*args, **kwargs)
 
   def obtener_departamento_usuario(self):
     'Obtiene el nombre del departamento al que el usuario de la asignacion pertenece'
