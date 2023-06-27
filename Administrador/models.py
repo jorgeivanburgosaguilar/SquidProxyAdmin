@@ -38,7 +38,8 @@ class Usuario(models.Model):
 class Categoria(models.Model):
   nombre = models.CharField(max_length=256)
   descripcion = models.TextField()
-  ruta = models.CharField(max_length=256)
+  ruta = models.CharField(max_length=256,
+                          help_text='Directorio local en posicion relativa a la variable de entorno SQUIDPROXYADM_DIRLISTABLOQUEO')
   history = HistoricalRecords()
 
   class Meta:
@@ -53,11 +54,11 @@ class Categoria(models.Model):
 class Nivel(models.Model):
   nombre = models.CharField(max_length=256)
   filtrar = models.BooleanField(default=True, verbose_name='filtrar',
-                                help_text='Señala si el nivel debe ser procesado por el filtro de sitios web.')
+                                help_text='Señala si el nivel debe ser procesado por el filtro de sitios web. Para el caso especial del nivel "Sin Filtro"')
   sinaccesoainternet = models.BooleanField(default=False, verbose_name='sin acceso a internet',
                                            help_text='Señala si el nivel no tiene permitido acceder a ningun sitio de internet')
   lista_blanca = models.BooleanField(default=False, verbose_name='lista blanca',
-                                     help_text='Señala si el nivel debe evaluar los filtros como una lista blanca')
+                                     help_text='Señala si el nivel debe evaluar los sitios como una lista blanca')
   categorias = models.ManyToManyField(
     Categoria, blank=True, verbose_name='categorias')
   history = HistoricalRecords()
@@ -73,7 +74,8 @@ class Nivel(models.Model):
 
 class Sitio(models.Model):
   categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE)
-  dominio = models.CharField(max_length=256)
+  dominio = models.CharField(max_length=256,
+                             help_text='Dominio completo no soporta comodines, pero en caso de ser el dominio absoluto bloquea todos los subdominios. Ejemplo: google.com bloquea 123.google.com, abc.google.com, etc.')
 
   class Meta:
     ordering = ['dominio']
@@ -85,7 +87,8 @@ class Sitio(models.Model):
 
 
 class SitioPermanentementePermitido(models.Model):
-  dominio = models.CharField(max_length=256)
+  dominio = models.CharField(max_length=256,
+                             help_text='Soporta comodines tipo SQL LIKE con el caracter % ó _. Ejemplo: %.gob.mx ó google_.com')
   history = HistoricalRecords()
 
   class Meta:
@@ -98,7 +101,8 @@ class SitioPermanentementePermitido(models.Model):
 
 
 class SitioPermanentementeDenegado(models.Model):
-  dominio = models.CharField(max_length=256)
+  dominio = models.CharField(max_length=256,
+                             help_text='Soporta comodines tipo SQL LIKE con el caracter % ó _. Ejemplo: %.gob.mx ó google_.com')
   history = HistoricalRecords()
 
   class Meta:
@@ -112,7 +116,8 @@ class SitioPermanentementeDenegado(models.Model):
 
 class AsignacionTemporalDepartamento(models.Model):
   departamento = models.ForeignKey(Departamento, on_delete=models.CASCADE)
-  dominio = models.CharField(max_length=256)
+  dominio = models.CharField(max_length=256,
+                             help_text='Soporta comodines tipo SQL LIKE con el caracter % ó _. Ejemplo: %.gob.mx ó google_.com')
   fecha_creacion = models.DateTimeField(
     auto_now_add=True, verbose_name='fecha de creacion')
   fecha_expiracion = models.DateField(verbose_name='fecha de expiracion')
@@ -130,7 +135,8 @@ class AsignacionTemporalDepartamento(models.Model):
 
 class AsignacionTemporalUsuario(models.Model):
   usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
-  dominio = models.CharField(max_length=256)
+  dominio = models.CharField(max_length=256,
+                             help_text='Soporta comodines tipo SQL LIKE con el caracter % ó _. Ejemplo: %.gob.mx ó google_.com')
   fecha_creacion = models.DateTimeField(
     auto_now_add=True, verbose_name='fecha de creacion')
   fecha_expiracion = models.DateField(verbose_name='fecha de expiracion')
