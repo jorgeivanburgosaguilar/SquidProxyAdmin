@@ -5,7 +5,6 @@ ACL Externa para Squid 3.5
 '''
 import os
 import sys
-import re
 import django
 from django.db import close_old_connections, ProgrammingError, OperationalError
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
@@ -44,8 +43,6 @@ MUERTESUBITA = quote(os.getenv('SQUIDPROXYADM_MUERTESUBITA'))
 # Variables
 fin = False
 recien_nacido = True
-regexp_ip = re.compile(
-  r'\A([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})$')
 ips_localhost = ['127.0.0.1', '::', '::1']
 TLDS = procesar_tlds()
 SQUIDPASS = 'ERR'
