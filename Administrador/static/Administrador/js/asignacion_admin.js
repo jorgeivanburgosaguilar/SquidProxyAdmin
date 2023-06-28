@@ -35,6 +35,17 @@ window.onload = function () {
             ipSelect.append($("<option value=''>---------</option>"));
           });
       });
+
+      const macInput = $("#id_mac");
+      macInput.on("paste", function (event) {
+        event.preventDefault();
+        const pastedText = event.originalEvent.clipboardData.getData("text");
+        const cleanedInput = pastedText
+          .replace(/[^a-zA-Z0-9]/g, "")
+          .toUpperCase();
+        const groups = cleanedInput.match(/.{1,2}/g);
+        if (groups && groups.length > 0) macInput.val(groups.join(":"));
+      });
     })(django.jQuery);
   }
 };

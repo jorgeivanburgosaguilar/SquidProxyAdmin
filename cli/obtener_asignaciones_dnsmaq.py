@@ -22,7 +22,11 @@ from Administrador.models import Asignacion
 PRODUCCION = estamos_en_produccion()
 
 try:
-  asignaciones = Asignacion.objects.all().values('ip', 'mac')
+  id_red = 1  # Red por defecto
+  if len(sys.argv) > 1:
+    id_red = int(sys.argv[1])
+
+  asignaciones = Asignacion.objects.filter(red_id=id_red).values('ip', 'mac')
   for asignacion in asignaciones:
     sys.stdout.write(
       f'dhcp-host={asignacion["mac"].upper()},{asignacion["ip"]}\n')

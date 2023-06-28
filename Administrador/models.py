@@ -2,7 +2,6 @@
 Models
 '''
 import re
-import netaddr
 from django.db import models
 from django.core.validators import MaxValueValidator, validate_ipv46_address
 from django.core.exceptions import ValidationError
@@ -200,12 +199,6 @@ def validate_mac_address(mac_address):
     raise ValidationError('Direccion MAC invalida.') from exc
 
 
-def format_mac_address(mac_address):
-  mac = netaddr.EUI(mac_address)
-  mac.dialect = netaddr.mac_unix_expanded
-  return str(mac).upper()
-
-
 class Asignacion(models.Model):
   class TipoConexion(models.IntegerChoices):
     OTRO = 0
@@ -231,10 +224,6 @@ class Asignacion(models.Model):
   ultima_actualizacion = models.DateTimeField(
     auto_now=True, verbose_name='ultima actualizacion')
   history = HistoricalRecords()
-
-  def save(self, *args, **kwargs):
-    self.mac = format_mac_address(self.mac)
-    super().save(*args, **kwargs)
 
   def obtener_departamento_usuario(self):
     'Obtiene el nombre del departamento al que el usuario de la asignacion pertenece'
