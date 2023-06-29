@@ -192,7 +192,7 @@ class Red(models.Model):
 
 def validate_mac_address(mac_address):
   try:
-    patron = r'^([0-9A-Fa-f.:-]){12,17}$'
+    patron = r'^([0-9A-F]{2}:){5}[0-9A-F]{2}$'
     if not re.match(patron, mac_address):
       raise ValueError
   except (re.error, ValueError) as exc:
